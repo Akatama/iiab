@@ -1,20 +1,41 @@
 name: '"40 min" IIAB "UNITTEST" on Debian 12 on RPi 3'
+# run-name: ${{ github.actor }} is testing out GitHub Actions 🚀
 
+# https://michaelcurrin.github.io/dev-cheatsheets/cheatsheets/ci-cd/github-actions/triggers.html
 on: [push, pull_request, workflow_dispatch]
+
+# on:
+#   push:
+#
+#   pull_request:
+#
+#   # Allows you to run this workflow manually from the Actions tab
+#   workflow_dispatch:
+#
+#   # Set your workflow to run every day of the week from Monday to Friday at 6:00 UTC
+#   schedule:
+#     - cron: "0 6 * * 1-5"
 
 jobs:
   test-install:
     runs-on: ubuntu-24.04
     strategy:
       matrix:
-        arch: [aarch64]
+        arch: [debian12]
         include:
-        - arch: aarch64
-          cpu: cortex-a76
-          cpu_info: cpuinfo/raspberrypi_5
+        - arch: debian12
+          cpu: cortex-a7
+          cpu_info: cpuinfo/raspberrypi_3b
           base_image: raspios_lite_arm64:latest
           # source https://www.raspberrypi.com/software/operating-systems/
+
     steps:
+      #- run: echo "🎉 The job was automatically triggered by a ${{ github.event_name }} event."
+      #- run: echo "🔎 The name of your branch is ${{ github.ref }} and your repository is ${{ github.repository }}."
+      #- name: Dump GitHub context (typically almost 500 lines)
+      #  env:
+      #    GITHUB_CONTEXT: ${{ toJSON(github) }}
+      #  run: echo "$GITHUB_CONTEXT"
       - name: Dump matrix context
         env:
           MATRIX_CONTEXT: ${{ toJSON(matrix) }}
@@ -36,7 +57,6 @@ jobs:
               uname -a    # uname -srm
               whoami      # Typically 'root' instead of 'runner'
               pwd         # /home/runner/work/iiab/iiab == $GITHUB_WORKSPACE == ${{ github.workspace }}
-              cat /etc/os-release
               apt-get update -y --allow-releaseinfo-change
               #apt-get upgrade
               apt-get install --no-install-recommends -y git curl
