@@ -1,4 +1,4 @@
-name: '"40 min" IIAB "Medium" on RPi 5'
+name: '"40 min" IIAB "Small" on RPi 5'
 
 on: [push, pull_request, workflow_dispatch]
 
@@ -30,7 +30,7 @@ jobs:
               apt-get install --no-install-recommends -y git curl
               ls /opt/iiab/iiab
               mkdir /etc/iiab
-              cp /opt/iiab/iiab/vars/local_vars_medium.yml /etc/iiab/local_vars.yml
+              cp /opt/iiab/iiab/vars/local_vars_small.yml /etc/iiab/local_vars.yml
               /opt/iiab/iiab/scripts/ansible
               ./iiab-install
               cd /opt/iiab/iiab
