@@ -11,7 +11,7 @@ jobs:
           fetch-depth: 0    # Default is 1, but iiab-summary (below) needs git tag history.
       - uses: pguyot/arm-runner-action@v2
         with:
-          image_additional_mb: 1024
+          image_additional_mb: 10240
           cpu: cortex-a76
           cpu_info: cpuinfo/raspberrypi_5
           base_image: raspios_lite_arm64:latest
