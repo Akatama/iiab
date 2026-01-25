@@ -30,7 +30,22 @@ jobs:
               apt-get install --no-install-recommends -y git curl
               ls /opt/iiab/iiab
               mkdir /etc/iiab
-              echo "remoteit_install: False\ntailscale_install: False\nkolibri_install: False\nkolibri_enabled: False\nkiwix_install: False\nkiwix_enabled: False\nosm_vector_maps_install: False\nmaps_install: False\nawstats_install: False\nawstats_enabled: False\nmatomo_install: True\nmatomo_enabled: True\ncaptiveportal_install: False\ncalibreweb_install: False\calibreweb_enabled: False" > /etc/iiab/local_vars.yml
+              cat > /etc/iiab/local_vars.yml << EOL
+              remoteit_install: False
+              tailscale_install: False
+              kolibri_install: False
+              kolibri_enabled: False
+              kiwix_install: False
+              kiwix_enabled: False
+              osm_vector_maps_install: False
+              maps_install: False
+              awstats_install: False
+              awstats_enabled: False
+              matomo_install: True
+              matomo_enabled: True
+              captiveportal_install: False
+              calibreweb_install: False
+              calibreweb_enabled: False
               /opt/iiab/iiab/scripts/ansible
               ./iiab-install
               cd /opt/iiab/iiab
