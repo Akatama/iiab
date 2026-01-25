@@ -30,7 +30,7 @@ jobs:
               apt-get install --no-install-recommends -y git curl
               ls /opt/iiab/iiab
               mkdir /etc/iiab
-              cp /opt/iiab/iiab/vars/local_vars_small.yml /etc/iiab/local_vars.yml
+              echo "remoteit_install: False\ntailscale_install: False\nkolibri_install: False\nkolibri_enabled: False\nkiwix_install: False\nkiwix_enabled: False\nosm_vector_maps_install: False\nmaps_install: False\nawstats_install: False\nawstats_enabled: False\nmatomo_install: True\nmatomo_enabled: True\ncaptiveportal_install: False\ncalibreweb_install: False\calibreweb_enabled: False" > /etc/iiab/local_vars.yml
               /opt/iiab/iiab/scripts/ansible
               ./iiab-install
               cd /opt/iiab/iiab
