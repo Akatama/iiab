@@ -52,3 +52,7 @@ jobs:
               cd /opt/iiab/iiab
               iiab-summary
               cat /etc/iiab/iiab_state.yml
+      - name: Cat /root/.my.cnf
+        if: always()
+        run: sudo cat /root/.my.cnf
+
