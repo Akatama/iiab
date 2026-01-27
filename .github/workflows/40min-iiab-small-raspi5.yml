@@ -48,7 +48,7 @@ jobs:
               calibreweb_enabled: False
               EOL
               /opt/iiab/iiab/scripts/ansible
-              ./iiab-install
+              sudo ./iiab-install
               cd /opt/iiab/iiab
               iiab-summary
               cat /etc/iiab/iiab_state.yml
