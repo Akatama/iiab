@@ -18,11 +18,13 @@ jobs:
           # source https://www.raspberrypi.com/software/operating-systems/
           copy_repository_path: /opt/iiab/iiab
           bind_mount_repository: true
+          use_systemd_nspawn: true
           commands: |
               echo "🍏 This job's status is ${{ job.status }}."
               uname -a    # uname -srm
               whoami      # Typically 'root' instead of 'runner'
               pwd         # /opt/iiab/iiab
+              ls -l /opt/iiab/iiab
               apt-get update -y --allow-releaseinfo-change
               #apt-get upgrade
               apt-get install --no-install-recommends -y git curl
@@ -45,7 +47,7 @@ jobs:
               calibreweb_install: False
               calibreweb_enabled: False
               EOL
-              /opt/iiab/iiab/scripts/ansible
+              sudo /opt/iiab/iiab/scripts/ansible
               sudo ./iiab-install
               cd /opt/iiab/iiab
               iiab-summary

@@ -69,6 +69,10 @@
     owner: root
     mode: '0600'
 
+- name: "Print /root/.my.cnf file"
+  ansible.builtin.debug:
+    msg: "{{ lookup('ansible.builtin.file', '/root/.my.cnf') }}"
+
 #- name: Remove the MySQL 'test' database
 #  mysql_db:
 #    db: test
