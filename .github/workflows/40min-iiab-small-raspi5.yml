@@ -9,12 +9,6 @@ jobs:
       - uses: actions/checkout@v5
         with:
           fetch-depth: 0    # Default is 1, but iiab-summary (below) needs git tag history.
-      - name: Set up /opt/iiab/iiab
-        run: |
-          mkdir /opt/iiab
-          mv $GITHUB_WORKSPACE /opt/iiab
-          # Github Actions is weird, do not delete the line below. Yes, it will cause everything to break. Really.
-          mkdir $GITHUB_WORKSPACE
       - uses: pguyot/arm-runner-action@v2
         with:
           image_additional_mb: 10240
@@ -23,14 +17,12 @@ jobs:
           base_image: raspios_lite_arm64:latest
           # source https://www.raspberrypi.com/software/operating-systems/
           copy_repository_path: /opt/iiab/iiab
+          bind_mount_repository: true
           commands: |
               echo "🍏 This job's status is ${{ job.status }}."
-              # /proc/cpuinfo not available on ubuntu-24.04 runner, per https://github.com/pguyot/arm-runner-action#cpu_info
-              # grep Model /proc/cpuinfo
               uname -a    # uname -srm
               whoami      # Typically 'root' instead of 'runner'
-              pwd         # /home/runner/work/iiab/iiab == $GITHUB_WORKSPACE == ${{ github.workspace }}
-              cat /etc/os-release
+              pwd         # /opt/iiab/iiab
               apt-get update -y --allow-releaseinfo-change
               #apt-get upgrade
               apt-get install --no-install-recommends -y git curl
