@@ -18,7 +18,6 @@ jobs:
           # source https://www.raspberrypi.com/software/operating-systems/
           copy_repository_path: /opt/iiab/iiab
           bind_mount_repository: true
-          use_systemd_nspawn: true
           commands: |
               echo "🍏 This job's status is ${{ job.status }}."
               uname -a    # uname -srm
