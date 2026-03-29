@@ -13,3 +13,4 @@ deprecated
 \#*#
 
 /opentofu/.terraform
+/opentofu/test-key*
