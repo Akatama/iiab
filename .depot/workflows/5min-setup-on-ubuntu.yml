@@ -5,7 +5,7 @@
 # - Rewrote .github/ path references to .depot/
 # - Changed GitHub runs-on labels to their Depot equivalents
 
-name: '"30 min" LARGE on Ubuntu 24.04'
+name: '"5 min" SETUP on Ubuntu 24.04'
 # run-name: ${{ github.actor }} is testing out GitHub Actions 🚀
 on:
   push:
@@ -41,8 +41,8 @@ jobs:
         uses: actions/checkout@v6
       - name: Set up /opt/iiab/iiab # Some steps to get ready for the install
         run: |
-          mkdir /opt/iiab
-          mv $GITHUB_WORKSPACE /opt/iiab
+          sudo mkdir /opt/iiab
+          sudo mv $GITHUB_WORKSPACE /opt/iiab
           mkdir $GITHUB_WORKSPACE    # OR SUBSEQUENT STEPS WILL FAIL
       - run: "echo \"\U0001F34F This job's status [SO FAR!] is ${{ job.status }}.\""
       - name: GitHub Actions "runner" environment
