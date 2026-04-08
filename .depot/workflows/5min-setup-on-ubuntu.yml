@@ -58,6 +58,7 @@ jobs:
       - name: Set up /etc/iiab/local_vars.yml
         run: |
           sudo mkdir /etc/iiab
+          echo "is_chroot: True" >> /opt/iiab/iiab/vars/local_vars_none.yml
           sudo cp /opt/iiab/iiab/vars/local_vars_none.yml /etc/iiab/local_vars.yml
       - run: sudo ./iiab-install
         working-directory: /opt/iiab/iiab

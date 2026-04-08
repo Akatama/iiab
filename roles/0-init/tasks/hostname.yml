@@ -17,9 +17,7 @@
   when: cloudcfg_test.stat.exists
 
 - name: 'Set /etc/hostname with {{ iiab_hostname }}"'
-  hostname:
-    name: "{{ iiab_hostname }}"
-    use: generic
+  hostname: hostnamectl set-hostname "{{ iiab_hostname }}"
   when: not ansible_facts.is_chroot
   # 2021-08-31: Periods in /etc/hostname fail with some WiFi routers (#2904)
   # command: hostnamectl set-hostname "{{ iiab_hostname }}.{{ iiab_domain }}"
