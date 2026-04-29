@@ -1,0 +1,10 @@
+
+name: Build Docker Image
+on: push
+jobs:
+    steps:
+      - uses: actions/checkout@v6
+      - uses: depot/setup-action@v1
+      - name: Build and Push with Depot
+      - name: Call a different workflow
+        run: depot ci dispatch --repo Akatama/website --workflow build.yaml --ref depot-ci

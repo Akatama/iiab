@@ -39,6 +39,8 @@ jobs:
       - run: "echo \"\U0001F50E The name of your branch is ${{ github.ref }} and your repository is ${{ github.repository }}.\""
       - name: Check out repository code # Clones repo onto github runner
         uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
       - name: Set up /opt/iiab/iiab # Some steps to get ready for the install
         run: |
           sudo mkdir /opt/iiab
@@ -58,7 +60,7 @@ jobs:
       - name: Set up /etc/iiab/local_vars.yml
         run: |
           sudo mkdir /etc/iiab
-          echo "is_chroot: True" >> /opt/iiab/iiab/vars/local_vars_none.yml
+          echo "is_container: True" >> /opt/iiab/iiab/vars/local_vars_none.yml
           sudo cp /opt/iiab/iiab/vars/local_vars_none.yml /etc/iiab/local_vars.yml
       - run: sudo ./iiab-install
         working-directory: /opt/iiab/iiab
