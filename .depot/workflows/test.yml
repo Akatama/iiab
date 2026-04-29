@@ -1,7 +1,9 @@
 
-name: Build Docker Image
+name: Test
 on: push
 jobs:
+  test_dispatch:
+    runs-on: depot-ubuntu-latest
     steps:
       - uses: actions/checkout@v6
       - uses: depot/setup-action@v1
