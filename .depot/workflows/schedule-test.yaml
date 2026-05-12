@@ -1,0 +1,13 @@
+  name: Schedule Test (every 10 min)
+
+  on:
+    schedule:
+      - cron: '*/10 * * * *'
+
+  jobs:
+    ping:
+      runs-on: depot-ubuntu-24.04
+      timeout-minutes: 5
+      steps:
+        - name: Print time
+          run: date -u
