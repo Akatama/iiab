@@ -9,4 +9,6 @@ jobs:
       - uses: depot/setup-action@v1
       - name: Build and Push with Depot
       - name: Call a different workflow
-        run: depot ci dispatch --repo Akatama/website --workflow build.yaml --ref depot-ci
+        env:
+          DEPOT_SECRET_TOKEN: ${{ secrets.DEPOT_SECRET_TOKEN }}
+        run: DEPOT_TOKEN="$DEPOT_SECRET_TOKEN" depot ci dispatch --repo Akatama/website --workflow build.yaml --ref depot-ci
