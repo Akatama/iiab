@@ -48,6 +48,7 @@ jobs:
       - name: Set up /opt/iiab/iiab # Some steps to get ready for the install
         run: |
           sudo mkdir /opt/iiab
+          sudo chown $USER /opt/iiab
           mv $GITHUB_WORKSPACE /opt/iiab
           mkdir $GITHUB_WORKSPACE    # OR SUBSEQUENT STEPS WILL FAIL
       - run: "echo \"\U0001F34F This job's status [SO FAR!] is ${{ job.status }}.\""
