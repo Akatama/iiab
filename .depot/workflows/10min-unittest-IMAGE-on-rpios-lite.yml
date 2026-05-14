@@ -34,7 +34,7 @@ on:
   workflow_dispatch:
 jobs:
   image:
-    runs-on: depot-ubuntu-latest # was: ubuntu-24.04-arm. Nonstandard GitHub runner label detected, changed to default Depot runner.
+    runs-on: depot-ubuntu-24.04-arm
     steps:
       - uses: actions/checkout@v6
         with:
