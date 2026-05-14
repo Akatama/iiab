@@ -34,7 +34,7 @@ on:
   workflow_dispatch:
 jobs:
   image:
-    runs-on: depot-ubuntu-24.04-arm
+    runs-on: depot-ubuntu-latest
     steps:
       - uses: actions/checkout@v6
         with:
