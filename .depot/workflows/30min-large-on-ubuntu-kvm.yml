@@ -1,0 +1,137 @@
+# Depot CI Migration
+# Source: .github/workflows/30min-large-on-ubuntu.yml
+#
+# Changes made:
+# - Rewrote .github/ path references to .depot/
+# - Changed GitHub runs-on labels to their Depot equivalents
+
+name: '"30 min" LARGE on Ubuntu 24.04'
+# run-name: ${{ github.actor }} is testing out GitHub Actions 🚀
+on:
+  push:
+    paths-ignore:
+      - '**/*.md'
+      - '**/*.rst'
+      - '**/*.html'
+      - '**/*.css'
+      - '**/*.svg'
+      - '**/*.jpg'
+      - '**/*.png'
+      - '**/*.php'
+      - '**/*.js'
+  pull_request: # needed to show up in Pull Request UI
+    paths-ignore:
+      - '**/*.md'
+      - '**/*.rst'
+      - '**/*.html'
+      - '**/*.css'
+      - '**/*.svg'
+      - '**/*.jpg'
+      - '**/*.png'
+      - '**/*.php'
+      - '**/*.js'
+  workflow_dispatch:
+jobs:
+  test-install:
+    runs-on: depot-ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install QEMU and dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y qemu-system-x86 qemu-utils cloud-image-utils openssh-client
+
+      - name: Download Ubuntu 24.04 cloud image
+        run: |
+          wget -q https://cloud-images.ubuntu.com/noble/current/noble-server-cloudimg-amd64.img
+
+      - name: Resize image
+        run: |
+          qemu-img resize noble-server-cloudimg-amd64.img +20G
+
+      - name: Set up /etc/iiab/local_vars.yml
+        run: |
+          sudo mkdir -p /etc/iiab
+          sudo cp vars/local_vars_large.yml /etc/iiab/local_vars.yml
+
+      - name: Create cloud-init config
+        run: |
+          # Generate an SSH keypair for communicating with the VM
+          ssh-keygen -t ed25519 -f /tmp/vm_key -N ""
+          PUBKEY=$(cat /tmp/vm_key.pub)
+
+          cat > /tmp/user-data <<EOF
+          #cloud-config
+          users:
+            - name: iiab
+              sudo: ALL=(ALL) NOPASSWD:ALL
+              ssh_authorized_keys:
+                - $PUBKEY
+          write_files:
+            - path: /etc/iiab/local_vars.yml
+              content: |
+          $(sed 's/^/        /' /etc/iiab/local_vars.yml)
+          runcmd:
+            - mkdir -p /opt/iiab
+          EOF
+
+          cloud-localds /tmp/seed.img /tmp/user-data
+
+      - name: Copy repo into VM disk
+        run: |
+          # Create a second disk with the repo contents
+          tar czf /tmp/iiab-repo.tar.gz -C $GITHUB_WORKSPACE .
+          qemu-img create -f raw /tmp/repo-disk.img 2G
+          mkfs.ext4 /tmp/repo-disk.img
+          sudo mkdir /mnt/repo-disk
+          sudo mount -o loop /tmp/repo-disk.img /mnt/repo-disk
+          sudo tar xzf /tmp/iiab-repo.tar.gz -C /mnt/repo-disk
+          sudo umount /mnt/repo-disk
+
+      - name: Boot VM
+        run: |
+          sudo qemu-system-x86_64 \
+            -enable-kvm \
+            -m 4096 \
+            -smp 2 \
+            -nographic \
+            -drive file=noble-server-cloudimg-amd64.img,format=qcow2 \
+            -drive file=/tmp/seed.img,format=raw \
+            -drive file=/tmp/repo-disk.img,format=raw \
+            -net nic \
+            -net user,hostfwd=tcp::2222-:22 \
+            -daemonize \
+            -pidfile /tmp/qemu.pid
+
+      - name: Wait for SSH
+        run: |
+          for i in $(seq 1 30); do
+            ssh -o StrictHostKeyChecking=no \
+                -o ConnectTimeout=5 \
+                -i /tmp/vm_key \
+                -p 2222 iiab@localhost true && break
+            echo "Waiting for VM... ($i)"
+            sleep 10
+          done
+
+      - name: Set up repo inside VM
+        run: |
+          ssh -o StrictHostKeyChecking=no -i /tmp/vm_key -p 2222 iiab@localhost <<'ENDSSH'
+            sudo mkdir -p /opt/iiab/iiab
+            sudo mount /dev/sdc /mnt || (sudo mkdir -p /mnt && sudo mount /dev/sdc /mnt)
+            sudo cp -r /mnt/. /opt/iiab/iiab/
+          ENDSSH
+
+      - name: Install Ansible and run IIAB
+        run: |
+          ssh -o StrictHostKeyChecking=no -i /tmp/vm_key -p 2222 iiab@localhost <<'ENDSSH'
+            cd /opt/iiab/iiab
+            sudo pip3 install ansible
+            sudo ansible-playbook iiab-stages.yml
+          ENDSSH
+
+      - name: Shut down VM
+        if: always()
+        run: |
+          sudo kill $(cat /tmp/qemu.pid) || true
