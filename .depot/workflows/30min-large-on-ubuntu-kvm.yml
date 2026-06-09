@@ -95,7 +95,8 @@ jobs:
             -enable-kvm \
             -m 4096 \
             -smp 2 \
-            -nographic \
+            -serial file:/tmp/vm-console.log \
+            -display none \
             -drive file=noble-server-cloudimg-amd64.img,format=qcow2 \
             -drive file=/tmp/seed.img,format=raw \
             -drive file=/tmp/repo-disk.img,format=raw \
