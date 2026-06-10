@@ -122,14 +122,16 @@ jobs:
             sudo mkdir -p /opt/iiab/iiab
             sudo mount /dev/sdc /mnt || (sudo mkdir -p /mnt && sudo mount /dev/sdc /mnt)
             sudo cp -r /mnt/. /opt/iiab/iiab/
+            sudo mkdir /etc/iiab
+            sudo cp /opt/iiab/iiab/vars/local_vars_large.yml /etc/iiab/local_vars.yml
           ENDSSH
 
       - name: Install Ansible and run IIAB
         run: |
           ssh -o StrictHostKeyChecking=no -i /tmp/vm_key -p 2222 iiab@localhost <<'ENDSSH'
             cd /opt/iiab/iiab
-            sudo pip3 install ansible
-            sudo ansible-playbook iiab-stages.yml
+            sudo /opt/iiab/iiab/scripts/ansible
+            sudo ./iiab-install
           ENDSSH
 
       - name: Shut down VM
