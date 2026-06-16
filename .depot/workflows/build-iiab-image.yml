@@ -1,0 +1,111 @@
+on:
+  workflow_dispatch:  # run manually, or on schedule when deps change
+
+jobs:
+  build-image:
+    runs-on: depot-ubuntu-24.04-4
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install QEMU and dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            qemu-system-x86 qemu-utils cloud-image-utils ovmf \
+            cpu-checker genisoimage
+
+      - name: Download Ubuntu 24.04 cloud image
+        run: wget -q https://cloud-images.ubuntu.com/noble/current/noble-server-cloudimg-amd64.img
+
+      - name: Resize image
+        run: qemu-img resize noble-server-cloudimg-amd64.img +20G
+
+      - name: Set up /etc/iiab/local_vars.yml
+        run: |
+          sudo mkdir -p /etc/iiab
+          sudo cp vars/local_vars_large.yml /etc/iiab/local_vars.yml
+
+      - name: Create cloud-init config
+        run: |
+          ssh-keygen -t ed25519 -f /tmp/vm_key -N ""
+          PUBKEY=$(cat /tmp/vm_key.pub)
+          cat > /tmp/user-data <<EOF
+          #cloud-config
+          users:
+            - name: iiab
+              sudo: ALL=(ALL) NOPASSWD:ALL
+              ssh_authorized_keys:
+                - $PUBKEY
+          EOF
+          cloud-localds /tmp/seed.img /tmp/user-data
+
+      - name: Copy repo into VM disk
+        run: |
+          tar czf /tmp/iiab-repo.tar.gz -C $GITHUB_WORKSPACE .
+          qemu-img create -f raw /tmp/repo-disk.img 2G
+          mkfs.ext4 /tmp/repo-disk.img
+          sudo mkdir -p /mnt/repo-disk
+          sudo mount -o loop /tmp/repo-disk.img /mnt/repo-disk
+          sudo tar xzf /tmp/iiab-repo.tar.gz -C /mnt/repo-disk
+          sudo umount /mnt/repo-disk
+
+      - name: Boot VM
+        run: |
+          sudo qemu-system-x86_64 \
+            -enable-kvm \
+            -m 8192 \
+            -smp 4 \
+            -serial file:/tmp/vm-console.log \
+            -display none \
+            -drive file=noble-server-cloudimg-amd64.img,format=qcow2 \
+            -drive file=/tmp/seed.img,format=raw \
+            -drive file=/tmp/repo-disk.img,format=raw \
+            -net nic \
+            -net user,hostfwd=tcp::2222-:22 \
+            -daemonize \
+            -pidfile /tmp/qemu.pid
+          sudo chmod 644 /tmp/qemu.pid
+
+      - name: Wait for SSH
+        run: |
+          for i in $(seq 1 60); do
+            ssh -o StrictHostKeyChecking=no \
+                -o ConnectTimeout=5 \
+                -i /tmp/vm_key \
+                -p 2222 iiab@localhost true && break
+            echo "Waiting for VM... ($i)"
+            sleep 5
+          done
+
+      - name: Set up repo inside VM
+        run: |
+          ssh -o StrictHostKeyChecking=no -i /tmp/vm_key -p 2222 iiab@localhost <<'ENDSSH'
+            sudo mkdir -p /opt/iiab/iiab
+            sudo mount /dev/sdc /mnt || (sudo mkdir -p /mnt && sudo mount /dev/sdc /mnt)
+            sudo cp -r /mnt/. /opt/iiab/iiab/
+          ENDSSH
+
+      - name: Install Ansible inside the VM
+        run: |
+          ssh -o StrictHostKeyChecking=no -i /tmp/vm_key -p 2222 iiab@localhost <<'ENDSSH'
+            cd /opt/iiab/iiab
+            sudo /opt/iiab/iiab/scripts/ansible
+          ENDSSH
+
+      - name: Cleanly shut down VM
+        run: |
+          ssh -o StrictHostKeyChecking=no -i /tmp/vm_key -p 2222 iiab@localhost \
+            "sudo shutdown -h now" || true
+          # Wait for QEMU process to exit (up to 60s)
+          for i in $(seq 1 30); do
+            pgrep -x qemu-system-x86_64 || break
+            echo "Waiting for VM to shut down... ($i)"
+            sleep 2
+          done
+
+      - name: Snapshot sandbox to Depot Registry
+        uses: depot/snapshot-action@v1
+        with:
+          image: t67llm9p7m.registry.depot.dev/iiab-prebuilt:latest
